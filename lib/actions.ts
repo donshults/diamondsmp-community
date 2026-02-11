@@ -34,7 +34,10 @@ export async function register(formData: FormData) {
   const { email, password, name, inviteCode } = validatedFields.data
 
   // Validate invite code
+  console.log('Validating invite code:', inviteCode)
   const isValidCode = await validateInviteCode(inviteCode)
+  console.log('Invite code validation result:', isValidCode)
+  
   if (!isValidCode) {
     return {
       error: 'Invalid or expired invite code',
