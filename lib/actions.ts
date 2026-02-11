@@ -1,3 +1,5 @@
+'use server'
+
 // NextAuth v5 imports - signIn from configured auth instance
 import { signIn } from '@/auth'
 import { AuthError } from 'next-auth'
