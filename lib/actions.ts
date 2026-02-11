@@ -82,30 +82,44 @@ export async function register(formData: FormData) {
 }
 
 export async function login(formData: FormData) {
-  const validatedFields = LoginSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
-  })
-
-  if (!validatedFields.success) {
-    throw new Error('Invalid form data')
-  }
-
-  const { email, password } = validatedFields.data
-
+  console.log('🔍 Login action called')
+  
   try {
-    await signIn('credentials', {
+    const validatedFields = LoginSchema.safeParse({
+      email: formData.get('email'),
+      password: formData.get('password'),
+    })
+
+    if (!validatedFields.success) {
+      console.error('❌ Validation failed:', validatedFields.error)
+      throw new Error('Invalid form data')
+    }
+
+    const { email, password } = validatedFields.data
+    console.log('🔍 Attempting login for:', email)
+
+    const result = await signIn('credentials', {
       email,
       password,
-      redirectTo: '/dashboard',
+      redirect: false, // Don't redirect, handle manually
     })
+    
+    console.log('✅ SignIn result:', result)
+    
+    // Manual redirect after successful login
+    if (result?.error) {
+      throw new Error('Invalid email or password')
+    }
+    
+    redirect('/dashboard')
   } catch (error) {
+    console.error('❌ Login error:', error)
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
           throw new Error('Invalid email or password')
         default:
-          throw new Error('Something went wrong')
+          throw new Error('Something went wrong: ' + error.message)
       }
     }
     throw error
