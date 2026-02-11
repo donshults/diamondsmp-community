@@ -1,4 +1,5 @@
-import { signIn, AuthError } from 'next-auth'
+import { signIn } from '@/auth'
+import { AuthError } from 'next-auth'
 import { db } from './db'
 import { validateInviteCode, useInviteCode } from './data'
 import bcrypt from 'bcryptjs'
