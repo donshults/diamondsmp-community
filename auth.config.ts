@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
+import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { getUserByEmail } from '@/lib/data'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -17,14 +19,23 @@ export default {
         if (validatedFields.success) {
           const { email, password } = validatedFields.data
           
-          // Temporary test user - bypass database for now
-          if (email === 'test@example.com' && password === 'test123') {
-            return {
-              id: '1',
-              email: 'test@example.com',
-              name: 'Test User',
-              tier: 'FREE',
+          try {
+            const user = await getUserByEmail(email)
+            if (!user || !user.password) return null
+            
+            const passwordsMatch = await bcrypt.compare(password, user.password)
+            
+            if (passwordsMatch) {
+              return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                tier: user.tier,
+              }
             }
+          } catch (error) {
+            console.error('Auth error:', error)
+            return null
           }
         }
         

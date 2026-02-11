@@ -1,4 +1,6 @@
 import NextAuth from 'next-auth'
+import { PrismaAdapter } from '@auth/prisma-adapter'
+import { authDb } from '@/lib/auth-db'
 import authConfig from '@/auth.config'
 
 export const {
@@ -7,8 +9,7 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
-  // Temporarily remove Prisma adapter to test
-  // adapter: PrismaAdapter(db),
+  adapter: PrismaAdapter(authDb),
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/auth/login',
