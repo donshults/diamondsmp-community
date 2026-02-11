@@ -13,7 +13,6 @@ export const {
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/auth/login',
-    signUp: '/auth/register',
   },
   callbacks: {
     async jwt({ token, user }) {
