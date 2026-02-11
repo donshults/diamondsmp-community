@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String              @id @default(cuid())
+  email             String              @unique
+  emailVerified     DateTime?
+  password          String?
+  name              String?
+  image             String?
+  tier              UserTier            @default(FREE)
+  inviteCodeUsed    String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  emailVerifiedAt   DateTime?
+  lastLoginAt       DateTime?
+  
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  inviteCodesCreated InviteCode[]       @relation("CreatedBy")
+  contentViews      ContentView[]
+  forumPosts        ForumPost[]
+  forumReplies      ForumReply[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model InviteCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  createdBy String
+  maxUses   Int       @default(1)
+  useCount  Int       @default(0)
+  expiresAt DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  
+  creator   User      @relation("CreatedBy", fields: [createdBy], references: [id])
+  
+  @@map("invite_codes")
+}
+
+model ContentItem {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  title        String
+  description  String?
+  type         ContentType
+  urlOrPath    String
+  tierRequired UserTier      @default(FREE)
+  sortOrder    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  // Relations
+  views        ContentView[]
+
+  @@map("content_items")
+}
+
+model ContentView {
+  id        String      @id @default(cuid())
+  userId    String
+  contentId String
+  viewedAt  DateTime    @default(now())
+  
+  user      User        @relation(fields: [userId], references: [id])
+  content   ContentItem @relation(fields: [contentId], references: [id])
+
+  @@unique([userId, contentId])
+  @@map("content_views")
+}
+
+model ForumPost {
+  id              String       @id @default(cuid())
+  authorId        String
+  title           String
+  body            String
+  isPinned        Boolean      @default(false)
+  telegramMessageId String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  author          User         @relation(fields: [authorId], references: [id])
+  replies         ForumReply[]
+
+  @@map("forum_posts")
+}
+
+model ForumReply {
+  id                String      @id @default(cuid())
+  postId            String
+  authorId          String
+  body              String
+  parentReplyId     String?
+  telegramMessageId String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  post              ForumPost   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author            User        @relation(fields: [authorId], references: [id])
+  parentReply       ForumReply? @relation("ReplyThread", fields: [parentReplyId], references: [id])
+  childReplies      ForumReply[] @relation("ReplyThread")
+
+  @@map("forum_replies")
+}
+
+enum UserTier {
+  FREE
+  PREMIUM
+  PRO
+}
+
+enum ContentType {
+  VIDEO
+  PDF
+  PAGE
+}
