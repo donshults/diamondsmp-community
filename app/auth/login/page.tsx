@@ -1,25 +1,9 @@
-'use client'
-
-import { useState } from 'react'
 import { login } from '@/lib/actions'
 import Link from 'next/link'
+import { SubmitButton } from '@/components/ui/submit-button'
+import { Suspense } from 'react'
 
-export default function LoginPage() {
-  const [error, setError] = useState<string>('')
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError('')
-    
-    const result = await login(formData)
-    
-    if (result?.error) {
-      setError(typeof result.error === 'string' ? result.error : 'Login failed')
-    }
-    
-    setLoading(false)
-  }
+function LoginForm() {
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -35,7 +19,7 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" action={handleSubmit}>
+        <form className="mt-8 space-y-6" action={login}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="sr-only">
@@ -67,23 +51,21 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {error && (
-            <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-
           <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
+            <SubmitButton pendingText="Signing in...">
+              Sign in
+            </SubmitButton>
           </div>
         </form>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }

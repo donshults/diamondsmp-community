@@ -1,25 +1,8 @@
-'use client'
-
-import { useState } from 'react'
 import { register } from '@/lib/actions'
 import Link from 'next/link'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default function RegisterPage() {
-  const [error, setError] = useState<string>('')
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError('')
-    
-    const result = await register(formData)
-    
-    if (result?.error) {
-      setError(typeof result.error === 'string' ? result.error : 'Registration failed')
-    }
-    
-    setLoading(false)
-  }
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -45,7 +28,7 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" action={handleSubmit}>
+        <form className="mt-8 space-y-6" action={register}>
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="sr-only">
@@ -105,20 +88,10 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {error && (
-            <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-
           <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {loading ? 'Creating account...' : 'Create account'}
-            </button>
+            <SubmitButton pendingText="Creating account...">
+              Create account
+            </SubmitButton>
           </div>
         </form>
 

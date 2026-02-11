@@ -1,4 +1,4 @@
-import { signIn } from '@/auth'
+import { signIn, AuthError } from 'next-auth'
 import { db } from './db'
 import { validateInviteCode, useInviteCode } from './data'
 import bcrypt from 'bcryptjs'
@@ -26,9 +26,7 @@ export async function register(formData: FormData) {
   })
 
   if (!validatedFields.success) {
-    return {
-      error: validatedFields.error.flatten().fieldErrors,
-    }
+    throw new Error('Invalid form data')
   }
 
   const { email, password, name, inviteCode } = validatedFields.data
@@ -39,9 +37,7 @@ export async function register(formData: FormData) {
   console.log('Invite code validation result:', isValidCode)
   
   if (!isValidCode) {
-    return {
-      error: 'Invalid or expired invite code',
-    }
+    throw new Error('Invalid or expired invite code')
   }
 
   // Check if user already exists
@@ -50,9 +46,7 @@ export async function register(formData: FormData) {
   })
 
   if (existingUser) {
-    return {
-      error: 'User with this email already exists',
-    }
+    throw new Error('User with this email already exists')
   }
 
   // Hash password
@@ -60,7 +54,7 @@ export async function register(formData: FormData) {
 
   try {
     // Create user
-    await db.user.create({
+    const user = await db.user.create({
       data: {
         email,
         password: hashedPassword,
@@ -73,16 +67,13 @@ export async function register(formData: FormData) {
     // Use invite code
     await useInviteCode(inviteCode)
 
-    // Sign in the user
-    await signIn('credentials', {
-      email,
-      password,
-      redirectTo: '/dashboard',
-    })
+    console.log('User created successfully:', user.email)
+    
+    // Redirect to login with success message
+    redirect('/auth/login?message=Registration successful. Please log in.')
   } catch (error) {
-    return {
-      error: 'Failed to create account',
-    }
+    console.error('Registration error:', error)
+    throw new Error('Failed to create account')
   }
 }
 
@@ -93,9 +84,7 @@ export async function login(formData: FormData) {
   })
 
   if (!validatedFields.success) {
-    return {
-      error: validatedFields.error.flatten().fieldErrors,
-    }
+    throw new Error('Invalid form data')
   }
 
   const { email, password } = validatedFields.data
@@ -107,8 +96,14 @@ export async function login(formData: FormData) {
       redirectTo: '/dashboard',
     })
   } catch (error) {
-    return {
-      error: 'Invalid email or password',
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          throw new Error('Invalid email or password')
+        default:
+          throw new Error('Something went wrong')
+      }
     }
+    throw error
   }
 }
