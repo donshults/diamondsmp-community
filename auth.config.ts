@@ -10,6 +10,7 @@ const loginSchema = z.object({
 })
 
 export default {
+  trustHost: true,
   providers: [
     Credentials({
       async authorize(credentials) {
