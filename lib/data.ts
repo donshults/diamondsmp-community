@@ -24,12 +24,16 @@ export async function validateInviteCode(code: string) {
   try {
     const inviteCode = await db.inviteCode.findUnique({
       where: { 
-        code,
-        isActive: true
+        code
       }
     })
     
     if (!inviteCode) return false
+    
+    // Check if active
+    if (!inviteCode.isActive) {
+      return false
+    }
     
     // Check if expired
     if (inviteCode.expiresAt && inviteCode.expiresAt < new Date()) {
@@ -42,7 +46,8 @@ export async function validateInviteCode(code: string) {
     }
     
     return true
-  } catch {
+  } catch (error) {
+    console.error('validateInviteCode error:', error)
     return false
   }
 }
