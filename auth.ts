@@ -1,6 +1,4 @@
 import NextAuth from 'next-auth'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { db } from '@/lib/db'
 import authConfig from '@/auth.config'
 
 export const {
@@ -9,7 +7,8 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
-  adapter: PrismaAdapter(db),
+  // Temporarily remove Prisma adapter to test
+  // adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/auth/login',
@@ -17,14 +16,14 @@ export const {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.tier = user.tier
+        token.tier = user.tier || 'FREE'
       }
       return token
     },
     async session({ session, token }) {
       if (token.sub && session.user) {
         session.user.id = token.sub
-        session.user.tier = token.tier as string
+        session.user.tier = (token.tier as string) || 'FREE'
       }
       return session
     },
