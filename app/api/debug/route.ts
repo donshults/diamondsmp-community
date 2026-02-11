@@ -1,38 +1,28 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 
 export async function GET() {
   try {
-    // Test database connection
-    const inviteCodes = await db.inviteCode.findMany({
-      select: {
-        code: true,
-        isActive: true,
-        expiresAt: true,
-        useCount: true,
-        maxUses: true,
-      }
-    })
-
-    return NextResponse.json({
-      database: 'connected',
-      environment: {
-        DATABASE_URL: process.env.DATABASE_URL ? 'set' : 'missing',
-        NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? 'set' : 'missing',
-        NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'missing',
-      },
-      inviteCodes,
+    const debug = {
       timestamp: new Date().toISOString(),
-    })
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'MISSING',
+        NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'NOT_SET',
+        NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? 'SET' : 'MISSING',
+      },
+      nextjs: {
+        version: '16.1.6',
+        turbopack: true,
+      },
+      status: 'HEALTHY'
+    }
+    
+    return NextResponse.json(debug)
   } catch (error) {
     return NextResponse.json({
-      database: 'error',
       error: error instanceof Error ? error.message : 'Unknown error',
-      environment: {
-        DATABASE_URL: process.env.DATABASE_URL ? 'set' : 'missing',
-        NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? 'set' : 'missing',
-        NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'missing',
-      },
+      timestamp: new Date().toISOString(),
+      status: 'ERROR'
     }, { status: 500 })
   }
 }
